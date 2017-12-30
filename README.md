@@ -1,5 +1,3 @@
-# mission
-666
 #include <IRremote.h>
 #include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
@@ -48,6 +46,8 @@ int sensorValue;
 void colorWipe(uint32_t c);
 void rainbowCycle( int r, int g, int b, uint8_t wait);
 void colorSet(uint32_t c);
+ void ble();
+ void rainbow(uint8_t wait);
 
 void setup()                                //创建无返回值函数
  {
@@ -68,7 +68,7 @@ void loop()                                  //无返回值loop函数
   Serial.println(buttonState);  //将状态输出到串口   
   sensorValue = analogRead(Light_PIN);             //光检测
   Serial.println(sensorValue); //彩色led灯根据光强调节颜色和亮度
-  Serial.println(results.value,HEX);输出红外线解码结果（十六进制）
+  Serial.println(results.value,HEX);//输出红外线解码结果（十六进制）
   
   if (sensorValue <= Light_value)//光强小于400
   {
@@ -80,7 +80,7 @@ void loop()                                  //无返回值loop函数
         {        
            red++;
            delay(100);
-           irrecv.resume();接收下一个值
+           irrecv.resume();//接收下一个值
         }
         if(results.value==33439935)//遥控器B键，变绿光
         {
@@ -107,8 +107,7 @@ void loop()                                  //无返回值loop函数
           delay(100);
           irrecv.resume();
         }
-        if(results.value==33478695）//遥控器down键，减弱光强
-        {
+        if(results.value==33478695)//遥控器down键
           down++;
           delay(100);
           irrecv.resume();
@@ -204,7 +203,7 @@ void loop()                                  //无返回值loop函数
     
      if(times%2!=0)    //灭灯  
      colorWipe(strip.Color(0,0,0));
-  }
+  
   
   if (sensorValue > Light_value)// 光强超过400后，灭灯，回到原始状态。
   {
@@ -281,5 +280,67 @@ void ble()
   }
 }
 
+ 
+
+   
+
+void rainbowCycle( int r, int g, int b, uint8_t wait) {
+  for (int val = 0; val < 255; val++) 
+  //val由0自增到254不断循环
+  {
+colorSet(strip.Color(map(val, val_min, val_max, 0, r), map(val, val_min, val_max, 0, g), map(val, val_min, val_max, 0, b)));
+//红绿蓝LED灯依次从暗到亮
+/*“map(val,x,y,m,n)”函数为映射函数，可将某个区间的值（x-y）变幻成（m-n），val则是你需要用来映射的数据*/
+    delay(wait); //延时
+  }
+  for (int val = 255; val >= 0; val--)  //val从255自减到0不断循环
+  {
+colorSet(strip.Color(map(val, val_min, val_max, 0, r), map(val, val_min, val_max, 0, g), map(val, val_min, val_max, 0, b)));
+//红绿蓝LED灯依次由亮到暗
+    delay(wait); //延时
+  
+  }
+}
+
+void colorWipe(uint32_t c) {
+  for (uint16_t i = 0; i < strip.numPixels(); i++)  //i从0自增到LED灯个数减1
+ {
+    strip.setPixelColor(i, c); //将第i个灯点亮
+    strip.show(); //led灯显示
+  }
+ }
+ void colorSet(uint32_t c) {
+  for (uint16_t i = 0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, c);
+  }
+  strip.show();
+}
+
+void colorSet(uint32_t c, int i) {
+  strip.setPixelColor(i, c);
+  strip.show();
+}
+ uint32_t Wheel(byte WheelPos) {
+  if (WheelPos < 85) {
+    return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+  } else if (WheelPos < 170) {
+    WheelPos -= 85;
+    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  } else {
+    WheelPos -= 170;
+    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+}
+ void rainbow(uint8_t wait) {
+  uint16_t i, j;
+
+  for (j = 0; j < 256; j++) {
+    for (i = 0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel((i + j) & 255));
+    }
+    strip.show();
+    delay(wait);
+  }
+ }
  
                                                                                  
